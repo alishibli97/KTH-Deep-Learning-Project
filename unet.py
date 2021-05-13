@@ -26,10 +26,10 @@ class UNet(nn.Module):
         self.conv_mid = nn.Conv2d(n_channels*16, mid_channels, kernel_size=3, padding=1)
 
         # upsampling
-        self.deconv4 = nn.ConvTranspose2d(n_channels*8 , mid_channels, kernel_size=3, stride=2, padding=3)
-        self.deconv4 = nn.ConvTranspose2d(n_channels*4 , mid_channels, kernel_size=3, stride=2, padding=3)
-        self.deconv4 = nn.ConvTranspose2d(n_channels*2 , mid_channels, kernel_size=3, stride=2, padding=3)
-        self.deconv4 = nn.ConvTranspose2d(n_channels*1 , mid_channels, kernel_size=3, stride=2, padding=3)
+        self.deconv4 = nn.ConvTranspose2d(n_channels*8 , mid_channels, kernel_size=3, stride=2, padding=1)
+        self.deconv4 = nn.ConvTranspose2d(n_channels*4 , mid_channels, kernel_size=3, stride=2, padding=1)
+        self.deconv4 = nn.ConvTranspose2d(n_channels*2 , mid_channels, kernel_size=3, stride=2, padding=1)
+        self.deconv4 = nn.ConvTranspose2d(n_channels*1 , mid_channels, kernel_size=3, stride=2, padding=1)
 
         # output layer
         self.conv_out = nn.Conv2d(1, mid_channels, kernel_size=1, padding=1)
