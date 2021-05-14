@@ -79,28 +79,28 @@ class UNet(nn.Module):
         # upsampling
         k=8
         out = mid_channels*k
-        inp = inp*2
+        inp = out*2
         self.trans4 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
         self.drop4 = nn.Dropout(p=0.5,inplace=True)
         self.deconv4 = DoubleConv(inp, out)
 
         k=4
         out = mid_channels*k
-        inp = inp*2
+        inp = out*2
         self.trans3 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
         self.drop3 = nn.Dropout(p=0.5,inplace=True)
         self.deconv3 = DoubleConv(inp, out)
 
         k=2
         out = mid_channels*k
-        inp = inp*2
+        inp = out*2
         self.trans2 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
         self.drop2 = nn.Dropout(p=0.5,inplace=True)
         self.deconv2 = DoubleConv(inp, out)
 
         k=1
         out = mid_channels*k
-        inp = inp*2
+        inp = out*2
         self.trans1 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
         self.drop1 = nn.Dropout(p=0.5,inplace=True)
         self.deconv1 = DoubleConv(inp, out)
