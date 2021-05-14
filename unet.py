@@ -2,13 +2,20 @@ import torch
 import torch.nn as nn
 
 class DoubleConv(nn.Module):
-    def __init__(self, n_channels, mid_channels):
+    def __init__(self, n_channels, mid_channels,first_layer=False):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(n_channels, mid_channels, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU(inplace=True)
+        if first_layer:
+            self.conv1 = nn.Conv2d(n_channels, mid_channels, kernel_size=3, padding=1)
+            self.relu1 = nn.ReLU(inplace=True)
+            self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, padding=1)
+            self.relu2 = nn.ReLU(inplace=True)
+        else:
+            self.conv1 = nn.Conv2d(n_channels, mid_channels, kernel_size=3, padding=1)
+            self.relu1 = nn.ReLU(inplace=True)
+            self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, padding=1)
+            self.relu2 = nn.ReLU(inplace=True)
+
 
     def forward(self, x):
         conv = self.conv1(x)
@@ -41,8 +48,8 @@ class UNet(nn.Module):
         # downsampling
         k=1
         out = mid_channels*k
-        inp = out//2
-        self.down1 = DoubleConv(inp,out)
+        inp = n_channels
+        self.down1 = DoubleConv(inp,out,first_layer=True)
         self.pool1 = PostProcess()
 
         k=2
@@ -80,21 +87,21 @@ class UNet(nn.Module):
         k=4
         out = mid_channels*k
         inp = inp*2
-        self.trans3 = nn.ConvTranspose2d(mid_channels*(k+1) , mid_channels*k, kernel_size=3, stride=2, padding=1)
+        self.trans3 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
         self.drop3 = nn.Dropout(p=0.5,inplace=True)
         self.deconv3 = DoubleConv(inp, out)
 
         k=2
         out = mid_channels*k
         inp = inp*2
-        self.trans2 = nn.ConvTranspose2d(mid_channels*(k+1), mid_channels*k, kernel_size=3, stride=2, padding=1)
+        self.trans2 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
         self.drop2 = nn.Dropout(p=0.5,inplace=True)
         self.deconv2 = DoubleConv(inp, out)
 
         k=1
         out = mid_channels*k
         inp = inp*2
-        self.trans1 = nn.ConvTranspose2d(mid_channels*(k+1), mid_channels*k, kernel_size=3, stride=2, padding=1)
+        self.trans1 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
         self.drop1 = nn.Dropout(p=0.5,inplace=True)
         self.deconv1 = DoubleConv(inp, out)
 
@@ -145,5 +152,6 @@ class UNet(nn.Module):
 
         return out
 
-model = UNet(n_channels=784,n_classes=10)
+pixels = 32*32
+model = UNet(n_channels=pixels,n_classes=10)
 print(model)
