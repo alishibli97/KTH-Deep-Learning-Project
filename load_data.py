@@ -7,35 +7,39 @@ import torch
 
 from torchvision import datasets, transforms
 
+def listdir_nohidden(path):
+    for f in os.listdir(path):
+        if not f.startswith('.'):
+            yield f
+
+
+
 train_path = "small_dataset/images/nir/"
 train_labels_path = "small_dataset/labels/"
 
-train_img_index = os.listdir(train_path)
+train_img_names_index = os.listdir(train_path)
 
-labels = {}
 labels_one_hot = {}
-k = 0
-for i, (root, dirs, filenames) in enumerate(os.walk(train_labels_path)):
-    if i == 0:
-        k = len(dirs)
+k = 9
+for i, label in enumerate(listdir_nohidden(train_labels_path)):
+    labels_one_hot[label] = np.zeros((k,))
+    labels_one_hot[label][i] = 1
 
-    if (root != train_labels_path):
-        label = root.replace(train_labels_path, "")
-        labels[label] = filenames
-
-        labels_one_hot[label] = np.zeros((k,))
-        labels_one_hot[label][i - 1] = 1
-
-dataset = SegmentationDataset(train_img_index, labels, labels_one_hot)
-
+dataset = SegmentationDataset(train_img_names_index, labels_one_hot)
+ 
 batch_size = 1
 shuffle = True
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
-#image, label = next(iter(dataloader))
-#print(label)
+image, label = next(iter(dataloader))
+print(image)
+print(label)
+print(torch.unique(label))
 
-for image_batch, label_batch in iter(dataloader):
-    print(torch.max(label_batch))
+plt.imshow(image[0], cmap='gray')
+plt.show()
+plt.imshow(label[0], cmap='gray')
+plt.show()
 
 print("finished")
+
