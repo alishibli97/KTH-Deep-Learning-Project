@@ -1,2 +1,3 @@
 torch
 scikit-image
+tensorflow
