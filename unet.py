@@ -2,27 +2,18 @@ import torch
 import torch.nn as nn
 
 class DoubleConv(nn.Module):
-    def __init__(self, n_channels, mid_channels,first_layer=False):
+    def __init__(self, input, output,first_layer=False):
         super().__init__()
 
-        if first_layer:
-            self.conv1 = nn.Conv2d(n_channels, mid_channels, kernel_size=3, padding=1)
-            self.relu1 = nn.ReLU(inplace=True)
-            self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, padding=1)
-            self.relu2 = nn.ReLU(inplace=True)
-        else:
-            self.conv1 = nn.Conv2d(n_channels, mid_channels, kernel_size=3, padding=1)
-            self.relu1 = nn.ReLU(inplace=True)
-            self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, padding=1)
-            self.relu2 = nn.ReLU(inplace=True)
-
-
+        self.conv1 = nn.Conv2d(input, output, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(output, output, kernel_size=3, padding=1)
+        self.relu = nn.ReLU(inplace=True)
+        
     def forward(self, x):
         conv = self.conv1(x)
-        conv = self.relu1(x)
-        conv = self.conv2(x)
-        conv = self.relu2(x)
-
+        conv = self.relu(conv)
+        conv = self.conv2(conv)
+        conv = self.relu(conv)
         return conv
 
 class PostProcess(nn.Module):
@@ -38,117 +29,66 @@ class PostProcess(nn.Module):
         return pool
 
 class UNet(nn.Module):
-    def __init__(self, n_channels, n_classes):
+    def __init__(self, n_channels, n_classes, mid_channels = 64):
         super(UNet, self).__init__()
         self.n_channels = n_channels
         self.n_classes = n_classes
-
-        mid_channels = 64
-
-        # downsampling
-        k=1
-        out = mid_channels*k
-        inp = n_channels
-        self.down1 = DoubleConv(inp,out,first_layer=True)
-        self.pool1 = PostProcess()
-
-        k=2
-        out = mid_channels*k
-        inp = out//2
-        self.down2 = DoubleConv(inp,out)
-        self.pool2 = PostProcess()
-
-        k=4
-        out = mid_channels*k
-        inp = out//2
-        self.down3 = DoubleConv(inp,out)
-        self.pool3 = PostProcess()
-
-        k=8
-        out = mid_channels*k
-        inp = out//2
-        self.down4 = DoubleConv(inp,out)
-        self.pool4 = PostProcess()
         
-        # mid
-        k=16
-        out = mid_channels*k
-        inp = out//2
-        self.mid = DoubleConv(inp,out)
+        # self.pool = nn.MaxPool2d(2)
+        self.pool = PostProcess()
+        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
-        # upsampling
-        k=8
-        out = mid_channels*k
-        inp = out*2
-        self.trans4 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
-        self.drop4 = nn.Dropout(p=0.5,inplace=True)
-        self.deconv4 = DoubleConv(inp, out)
+        self.down1 = DoubleConv(n_channels, 64)
+        self.down2 = DoubleConv(64, 128)
+        self.down3 = DoubleConv(128, 256)
+        self.down4 = DoubleConv(256, 512)
+        
+        self.mid = DoubleConv(512,1024)
 
-        k=4
-        out = mid_channels*k
-        inp = out*2
-        self.trans3 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
-        self.drop3 = nn.Dropout(p=0.5,inplace=True)
-        self.deconv3 = DoubleConv(inp, out)
+        self.up4 = DoubleConv(1024 + 512, 512)
+        self.up3 = DoubleConv(512 + 256, 256)
+        self.up2 = DoubleConv(256 + 128, 128)
+        self.up1 = DoubleConv(128 + 64, 64)
 
-        k=2
-        out = mid_channels*k
-        inp = out*2
-        self.trans2 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
-        self.drop2 = nn.Dropout(p=0.5,inplace=True)
-        self.deconv2 = DoubleConv(inp, out)
+        self.out = nn.Conv2d(64, n_classes, 1)
 
-        k=1
-        out = mid_channels*k
-        inp = out*2
-        self.trans1 = nn.ConvTranspose2d(inp, out, kernel_size=3, stride=2, padding=1)
-        self.drop1 = nn.Dropout(p=0.5,inplace=True)
-        self.deconv1 = DoubleConv(inp, out)
-
-        # output layer
-        self.out = nn.Conv2d(out, n_classes, kernel_size=1, padding=1)
 
     def forward(self, x):
         # downsampling
         conv1 = self.down1(x)
-        pool1 = self.pool1(conv1)
+        pool1 = self.pool(conv1)
 
         conv2 = self.down2(pool1)
-        pool2 = self.pool2(conv2)
+        pool2 = self.pool(conv2)
 
         conv3 = self.down3(pool2)
-        pool3 = self.pool3(conv3)
+        pool3 = self.pool(conv3)
 
         conv4 = self.down4(pool3)
-        pool4 = self.pool4(conv4)
-
+        pool4 = self.pool(conv4)
+        
         # mid
-        conv_mid = self.mid(pool4)
+        mid = self.mid(pool4)
 
         # upsampling
+        deconv4 = self.upsample(mid)
+        deconv4 = torch.cat([deconv4,conv4],dim=1)
+        deconv4 = self.up4(deconv4)
+        
+        deconv3 = self.upsample(deconv4)
+        deconv3 = torch.cat([deconv3,conv3],dim=1)
+        deconv3 = self.up3(deconv3)
 
-        deconv4 = self.trans4(conv_mid)
-        uconv4 = torch.cat([deconv4, conv4], dim=1)
-        uconv4 = self.drop4(uconv4)
-        uconv4 = self.deconv4(uconv4)
+        deconv2 = self.upsample(deconv3)
+        deconv2 = torch.cat([deconv2,conv2],dim=1)
+        deconv2 = self.up2(deconv2)
 
-        deconv3 = self.trans3(uconv4)
-        uconv3 = torch.cat([deconv3, conv3], dim=1)
-        uconv3 = self.drop3(uconv3)
-        uconv3 = self.deconv3(uconv3)
-
-        deconv2 = self.trans2(uconv3)
-        uconv2 = torch.cat([deconv2, conv2], dim=1)
-        uconv2 = self.drop2(uconv2)
-        uconv2 = self.deconv2(uconv2)
-
-        deconv1 = self.trans1(uconv2)
-        uconv1 = torch.cat([deconv1, conv1], dim=1)
-        uconv1 = self.drop1(uconv1)
-        uconv1 = self.deconv1(uconv1)
+        deconv1 = self.upsample(deconv2)
+        deconv1 = torch.cat([deconv1,conv1],dim=1)
+        deconv1 = self.up1(deconv1)
 
         # output layer
-        out = self.out(uconv1)
+        out = self.out(deconv1)
 
         return out
 
