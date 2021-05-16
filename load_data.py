@@ -12,8 +12,6 @@ def listdir_nohidden(path):
         if not f.startswith('.'):
             yield f
 
-
-
 train_path = "small_dataset/images/nir/"
 train_labels_path = "small_dataset/labels/"
 

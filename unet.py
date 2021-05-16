@@ -152,6 +152,6 @@ class UNet(nn.Module):
 
         return out
 
-pixels = 32*32
-model = UNet(n_channels=pixels,n_classes=9)
-print(model)
+# pixels = 32*32
+# model = UNet(n_channels=pixels,n_classes=9)
+# print(model)
