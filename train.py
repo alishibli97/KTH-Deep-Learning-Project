@@ -38,7 +38,7 @@ val_dataset = SegmentationDataset(val_img_names_index, labels_one_hot)
 Use_GPU = True
 Lr = 0.01
 channels = 1 # 512*512 #pixels
-classes = 10 #outputs 
+classes = 10 # outputs = number of classes + 1
 maxEpochs = 100
 batch_size = 5
 shuffle = True
