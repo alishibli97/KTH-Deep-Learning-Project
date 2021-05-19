@@ -1,6 +1,6 @@
 from unet import *
 from segmentation_dataset import *
-from load_data import *
+# from load_data import *
 
 #dataloader code
 
@@ -33,13 +33,6 @@ for i, label in enumerate(listdir_nohidden(train_labels_path)):
 
 train_dataset = SegmentationDataset(train_img_names_index, labels_one_hot)
 val_dataset = SegmentationDataset(val_img_names_index, labels_one_hot)
- 
-batch_size = 1
-shuffle = True
-dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
-
-
-print("finished")
 
 #SETTINGS
 Use_GPU = True
@@ -47,22 +40,19 @@ Lr = 0.01
 channels = 1 # 512*512 #pixels
 classes = 10 #outputs 
 maxEpochs = 100
-batch_size = 1
+batch_size = 5
 shuffle = True
 
 #Code 
-if Use_GPU: 
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
+if Use_GPU and torch.cuda.is_available(): 
+    device = torch.device('cuda')
 else:
     device = torch.device('cpu')
 #initalize model 
 
 #fix activationfunc, dropout and other settings for model as parameters later 
 
-model = UNet(channels,classes).to(device)
+model = UNet(channels, classes).to(device)
 
 #two different filepaths
 pathTrain = "Agriculture-Vision-2021\train"
@@ -98,17 +88,19 @@ def run():
 
 def train(): 
     
-    # model.train() #does this even work? 
+    model.train() #does this even work? 
 
     for i, (batch_x, batch_y) in enumerate(train_dataloader):
+        print(i)
         indata, target = batch_x.to(device), batch_y.to(device)
         optimizer.zero_grad()
         
 #         print(indata.shape)
         
-        indata = indata.unsqueeze(0)
+        indata = indata.unsqueeze(1)
 
         out = model.forward(indata)
+
         # out = model(indata[None, ...])
         loss = criterion(out, target)
         loss_value = loss.item()
