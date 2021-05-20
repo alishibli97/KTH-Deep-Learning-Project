@@ -1,4 +1,4 @@
-#dataloader code
+# dataloader code
 from unet import *
 from segmentation_dataset import SegmentationDataset
 
@@ -39,7 +39,7 @@ train_dataset = SegmentationDataset(train_img_names_index, labels_one_hot, train
 val_dataset = SegmentationDataset(val_img_names_index, labels_one_hot, val_path, val_labels_path, use_cache=True)
 test_dataset = SegmentationDataset(test_img_names_index, labels_one_hot, test_path, test_labels_path, use_cache=True)
 
-#SETTINGS
+# SETTINGS
 Use_GPU = True
 Lr = 1e-3
 channels = 1  # NIR vs RGB
@@ -48,7 +48,7 @@ maxEpochs = 10
 batch_size = 5
 shuffle = True
 
-#Code 
+# Code 
 if Use_GPU: 
     if torch.cuda.is_available():
         device = torch.device('cuda')
@@ -57,15 +57,15 @@ if Use_GPU:
         device = torch.device('cpu')
 else:
     device = torch.device('cpu')
-#initalize model 
+# initalize model 
 
-#fix activationfunc, dropout and other settings for model as parameters later 
+# fix activationfunc, dropout and other settings for model as parameters later 
 
 model = UNet(channels, classes).to(device)
 
-trainValRate = 0.7 #not in use
-lrRatesplan = None #not in use
-activation = "relu" #not in use 
+trainValRate = 0.7  # not in use
+lrRatesplan = None  # not in use
+activation = "relu"  # not in use 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), Lr)
 
