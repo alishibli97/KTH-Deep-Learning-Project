@@ -17,17 +17,17 @@ def listdir_nohidden(path):
         if not f.startswith('.'):
             yield f
 
-train_path = "small_dataset/images/nir/"
-val_path = "small_dataset/images/nir/"
-test_path = "small_dataset/images/nir/"
+train_path = "/new/Data/Agriculture-Vision-2021/train/images/nir/"
+val_path = "/new/Data/Agriculture-Vision-2021/val/images/nir/"
+test_path = "/new/Data/Agriculture-Vision-2021/train/images/nir/"
 
-train_labels_path = "small_dataset/labels/"
-val_labels_path = "small_dataset/labels/"
-test_labels_path = "small_dataset/labels/"
+train_labels_path = "/new/Data/Agriculture-Vision-2021/train/labels"
+val_labels_path = "/new/Data/Agriculture-Vision-2021/val/labels"
+test_labels_path = "/new/Data/Agriculture-Vision-2021/test/labels"
 
-train_img_names_index = os.listdir(train_path)[:10]
-val_img_names_index = os.listdir(val_path)[:10]
-test_img_names_index = os.listdir(test_path)[:10]
+train_img_names_index = os.listdir(train_path)[:10000]
+val_img_names_index = os.listdir(val_path)[:1000]
+test_img_names_index = os.listdir(test_path)[:1000]
 
 labels_one_hot = {}
 k = 9
@@ -45,7 +45,7 @@ Lr = 1e-3
 channels = 1  # NIR vs RGB
 classes = 10  # outputs (9 labels + 1 background)
 maxEpochs = 10
-batch_size = 5
+batch_size = 100
 shuffle = True
 
 # Code 
@@ -87,15 +87,16 @@ def run():
     
     for epoch in range(maxEpochs):
         train()
-        if epoch % 10 == 0: 
+        if epoch % 1 == 0: 
             print("training Epoch :" + str(epoch)  + "max Epochs")
 
         val_loss = validate()
         if val_loss > np.mean(validationLoss):
             print("Overfitting detected")
             break
-            
-        torch.save(model.state_dict(), "trained_model.pth")
+
+
+    torch.save(model.state_dict(), "trained_model.pth")
     
 
 def train(): 
