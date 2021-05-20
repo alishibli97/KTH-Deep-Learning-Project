@@ -1,14 +1,16 @@
 #dataloader code
 from unet import *
-from segmentation_dataset import *
-import os
-from torch.utils.data import DataLoader
 from segmentation_dataset import SegmentationDataset
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import os
 
+from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+from skimage.transform import resize
+from tqdm import tqdm, trange
 
 def listdir_nohidden(path):
     for f in os.listdir(path):
@@ -20,6 +22,8 @@ val_path = "small_dataset/images/nir/"
 test_path = "small_dataset/images/nir/"
 
 train_labels_path = "small_dataset/labels/"
+val_labels_path = "small_dataset/labels/"
+test_labels_path = "small_dataset/labels/"
 
 train_img_names_index = os.listdir(train_path)[:10]
 val_img_names_index = os.listdir(val_path)[:10]
@@ -31,16 +35,16 @@ for i, label in enumerate(listdir_nohidden(train_labels_path)):
     labels_one_hot[label] = np.zeros((k,))
     labels_one_hot[label][i] = 1
 
-train_dataset = SegmentationDataset(train_img_names_index, labels_one_hot)
-val_dataset = SegmentationDataset(val_img_names_index, labels_one_hot)
-test_dataset = SegmentationDataset(test_img_names_index, labels_one_hot)
+train_dataset = SegmentationDataset(train_img_names_index, labels_one_hot, train_path, train_labels_path, use_cache=True)
+val_dataset = SegmentationDataset(val_img_names_index, labels_one_hot, val_path, val_labels_path, use_cache=True)
+test_dataset = SegmentationDataset(test_img_names_index, labels_one_hot, test_path, test_labels_path, use_cache=True)
 
 #SETTINGS
 Use_GPU = True
-Lr = 1e-5
-channels = 1 # 512*512 #pixels
-classes = 10 #outputs 
-maxEpochs = 100 # 100
+Lr = 1e-3
+channels = 1  # NIR vs RGB
+classes = 10  # outputs (9 labels + 1 background)
+maxEpochs = 10
 batch_size = 5
 shuffle = True
 
@@ -59,24 +63,15 @@ else:
 
 model = UNet(channels, classes).to(device)
 
-#two different filepaths
-pathTrain = "Agriculture-Vision-2021\train"
-pathVal = "Agriculture-Vision-2021\val"
-
 trainValRate = 0.7 #not in use
 lrRatesplan = None #not in use
 activation = "relu" #not in use 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), Lr)
 
-
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-val_dataloader = DataLoader(val_dataset, batch_size=1)
-test_dataloader = DataLoader(test_dataset, batch_size=1)
-
-#trainer class/object?
-
-from tqdm import tqdm, trange
+val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
 trainingAcc = []
 trainingLoss = []
@@ -95,36 +90,39 @@ def run():
         if epoch % 10 == 0: 
             print("training Epoch :" + str(epoch)  + "max Epochs")
 
-        # if validate_go: 
         val_loss = validate()
         if val_loss > np.mean(validationLoss):
             print("Overfitting detected")
             break
             
-        # sys.stdout.write(f"\rEpoch {epoch+1}: loss={train_loss} acc={train_acc} val_loss={val_loss} val_acc={val_acc}")
-        # sys.stdout.flush()
-
-    torch.save(model.state_dict(), "trained_model.pth")
-
+        torch.save(model.state_dict(), "trained_model.pth")
+    
 
 def train(): 
     model.train()
     for i, (batch_x, batch_y) in enumerate(train_dataloader):
-        print('Batch no. ' + str(i))
-            
         indata, target = batch_x.to(device), batch_y.to(device)
         optimizer.zero_grad()
         indata = indata.unsqueeze(1)
-
         out = model(indata)
-        out_softmax = torch.softmax(out, 1)
 
+        out_softmax = torch.softmax(out, 1)
         img = postprocess(out_softmax)
         acc = iou(img, target)
-        print('Training accuracy for batch: ' + str(acc))
+        print('Training accuracy for batch %i: %f' % (i, acc))
+        trainingAcc.append(acc)
 
+        # plt.imshow(target[0], cmap='gray')
+        # plt.show()
+        # plt.imshow(indata[0][0], cmap='gray')
+        # plt.show()
+        # plt.imshow(img[0], cmap='gray')
+        # plt.show()
+        
+        
         loss = criterion(out, target)
         loss_value = loss.item()
+        print('Training loss for batch %i: %f' % (i, loss_value))
         trainingLoss.append(loss_value)
         loss.backward()
         optimizer.step()
@@ -161,17 +159,19 @@ def postprocess(img):
     return img
 
 def iou(prediction, target):
-    eps = 1e-6
-
+    eps = 0
     score = 0
+    # print(torch.unique(prediction))
+    # print(torch.unique(target))
     for k in range(1, 10):
         intersection = torch.sum((prediction==target) * (target==k)).item()
+        # print('intersection: ' + str(intersection))
         union = torch.sum(prediction==k).item() + torch.sum(target==k).item()
-        iou_k = (intersection + eps) / (union + eps)
+        # print('union: ' + str(union))
+        iou_k = 0 if intersection == 0 else (intersection + eps) / (union + eps)
         score += iou_k
 
-    score = (intersection + eps) / (union + eps)
+    score = score / 9
     return score
-
 
 run()
