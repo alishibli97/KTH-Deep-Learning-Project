@@ -133,7 +133,7 @@ def validate():
             img = postprocess(out_softmax)
             acc = iou(img, target)
             print('Validation accuracy: ' + str(acc))
-            # validationAcc.append(acc)
+            validationAcc.append(acc)
             
             loss = criterion(out, target)
             loss_value = loss.item()
@@ -147,6 +147,7 @@ def postprocess(img):
     img = img.cpu().numpy()
     img = np.squeeze(img)
     img = torch.from_numpy(img).type(torch.int64)
+    img = img.to(device)
     # img = re_normalize(img)
     return img
 
