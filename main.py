@@ -9,7 +9,6 @@ import os
 
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from skimage.transform import resize
 from tqdm import tqdm, trange
 
 def listdir_nohidden(path):
@@ -25,9 +24,9 @@ train_labels_path = "../Data/Agriculture-Vision-2021/train/labels"
 val_labels_path = "../Data/Agriculture-Vision-2021/val/labels"
 test_labels_path = "../Data/Agriculture-Vision-2021/test/labels"
 
-train_img_names_index = os.listdir(train_path)[:10]
-val_img_names_index = os.listdir(val_path)[:10]
-test_img_names_index = os.listdir(test_path)[:10]
+train_img_names_index = os.listdir(train_path)[:1000]
+val_img_names_index = os.listdir(val_path)[:100]
+test_img_names_index = os.listdir(test_path)[:100]
 
 labels_one_hot = {}
 k = 9
@@ -111,15 +110,7 @@ def train():
         img = postprocess(out_softmax)
         acc = iou(img, target)
         print('Training accuracy for batch %i: %f' % (i, acc))
-        trainingAcc.append(acc)
-
-        # plt.imshow(target[0], cmap='gray')
-        # plt.show()
-        # plt.imshow(indata[0][0], cmap='gray')
-        # plt.show()
-        # plt.imshow(img[0], cmap='gray')
-        # plt.show()
-        
+        trainingAcc.append(acc)   
         
         loss = criterion(out, target)
         loss_value = loss.item()

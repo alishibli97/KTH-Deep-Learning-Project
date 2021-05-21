@@ -1,8 +1,12 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from skimage.io import imread
+from skimage.transform import rescale
+import cv2
 import numpy as np
 import os
+
+import torchvision
 
 class SegmentationDataset(Dataset):
     def __init__(self, img_names, one_hot, image_path, label_path, transform=None, use_cache=False, pre_transform=None):
@@ -37,9 +41,12 @@ class SegmentationDataset(Dataset):
                         y = yy
                     else:
                         y += yy
-
+                
                 if self.pre_transform is not None:
                     x, y = self.pre_transform(x, y)
+
+                x = cv2.resize(x, (128, 128), interpolation=cv2.INTER_NEAREST)
+                y = cv2.resize(y, (128, 128), interpolation=cv2.INTER_NEAREST)
 
                 self.cached_data.append((x, y))
 
@@ -74,7 +81,8 @@ class SegmentationDataset(Dataset):
                     y += yy
 
         if self.transform is not None:
-            x, y = self.transform(x, y)
+            x = self.transform(x)
+            y = self.transform(y)
 
         x, y = torch.from_numpy(x).type(torch.float32), torch.from_numpy(y).type(torch.int64)
 
