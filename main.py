@@ -20,13 +20,13 @@ train_path = "../Data/Agriculture-Vision-2021/train/images/nir/"
 val_path = "../Data/Agriculture-Vision-2021/val/images/nir/"
 test_path = "../Data/Agriculture-Vision-2021/test/images/nir/"
 
-train_labels_path = "../Data/Agriculture-Vision-2021/train/labels"
-val_labels_path = "../Data/Agriculture-Vision-2021/val/labels"
-test_labels_path = "../Data/Agriculture-Vision-2021/test/labels"
+train_labels_path = "../Data/Agriculture-Vision-2021/train/labels/"
+val_labels_path = "../Data/Agriculture-Vision-2021/val/labels/"
+test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
 
 train_img_names_index = os.listdir(train_path)[:1000]
 val_img_names_index = os.listdir(val_path)[:100]
-test_img_names_index = os.listdir(test_path)[:100]
+test_img_names_index = os.listdir(test_path)[:200]
 
 labels_one_hot = {}
 k = 9
@@ -44,7 +44,7 @@ Lr = 1e-3
 channels = 1  # NIR vs RGB
 classes = 10  # outputs (9 labels + 1 background)
 maxEpochs = 10
-batch_size = 2
+batch_size = 10
 shuffle = True
 
 # Code 
