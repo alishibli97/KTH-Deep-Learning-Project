@@ -50,7 +50,7 @@ class UNet(nn.Module):
         self.up2 = DoubleConv(256 + 128, 128)
         self.up1 = DoubleConv(128 + 64, 64)
 
-        self.out = nn.Conv2d(64, n_channels, 1) # n_classes, 1)
+        self.out = nn.Conv2d(64, self.n_classes, 1)
 
     def forward(self, x):
         # downsampling
