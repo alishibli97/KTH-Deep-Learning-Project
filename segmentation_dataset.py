@@ -5,6 +5,7 @@ from skimage.transform import rescale
 import cv2
 import numpy as np
 import os
+from loguru import logger
 
 import torchvision
 
@@ -20,8 +21,8 @@ class SegmentationDataset(Dataset):
 
         if self.use_cache:
             self.cached_data = []
-            n_ignored_images = 0
 
+            n_ignored_images = 0
             for img_name in img_names:
                 input_ID = self.image_path + img_name
                 x = imread(input_ID)
@@ -57,8 +58,9 @@ class SegmentationDataset(Dataset):
                     self.cached_data.append((x, y))
                 except:
                     n_ignored_images += 1
-                
-            print(f"Ignoring {n_ignored_images} images because of missing labels")
+            
+            if n_ignored_images>0:
+                logger.info(f"Ignoring {n_ignored_images} images because of missing labels")
 
 
     def __len__(self):
