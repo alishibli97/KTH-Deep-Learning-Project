@@ -20,6 +20,7 @@ class SegmentationDataset(Dataset):
 
         if self.use_cache:
             self.cached_data = []
+            n_ignored_images = 0
 
             for img_name in img_names:
                 input_ID = self.image_path + img_name
@@ -55,7 +56,9 @@ class SegmentationDataset(Dataset):
 
                     self.cached_data.append((x, y))
                 except:
-                    print('ignoring image')
+                    n_ignored_images += 1
+                
+            print(f"Ignoring {n_ignored_images} images because of missing labels")
 
 
     def __len__(self):
