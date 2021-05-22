@@ -30,7 +30,6 @@ class SegmentationDataset(Dataset):
                     for label in self.one_hot:
                         pre, ext = os.path.splitext(img_name)
                         yy = imread(self.label_path + label + "/" + pre + ".png")
-                        # print(np.unique(yy))
 
                         # Extract the label pixel value (+1 since 0 is the value for background pixels)
                         label_num = int(np.where(self.one_hot[label]==1)[0]) + 1
@@ -42,7 +41,8 @@ class SegmentationDataset(Dataset):
                         if y is None:
                             y = yy
                         else:
-                            y = yy
+                            ind = y == 0
+                            y[ind] = yy[ind]
 
                     if self.pre_transform is not None:
                         x, y = self.pre_transform(x, y)
@@ -55,7 +55,7 @@ class SegmentationDataset(Dataset):
 
                     self.cached_data.append((x, y))
                 except:
-                    pass
+                    print('ignoring image')
 
 
     def __len__(self):
