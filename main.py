@@ -38,10 +38,13 @@ val_img_names_index = os.listdir(val_path)[:200]
 test_img_names_index = os.listdir(test_path)[:200]
 
 labels_one_hot = {}
-k = 9
-for i, label in enumerate(listdir_nohidden(train_labels_path)):
-    labels_one_hot[label] = np.zeros((k,))
-    labels_one_hot[label][i] = 1
+k = 8
+i=0
+for label in listdir_nohidden(train_labels_path):
+    if label!="storm_damage":
+        labels_one_hot[label] = np.zeros((k,))
+        labels_one_hot[label][i] = 1
+        i+=1
 
 train_dataset = SegmentationDataset(train_img_names_index, labels_one_hot, train_path, train_labels_path, use_cache=True)
 val_dataset = SegmentationDataset(val_img_names_index, labels_one_hot, val_path, val_labels_path, use_cache=True)
@@ -51,7 +54,7 @@ test_dataset = SegmentationDataset(test_img_names_index, labels_one_hot, test_pa
 Use_GPU = True
 Lr = 1e-3
 channels = 1  # NIR vs RGB
-classes = 10  # outputs (9 labels + 1 background)
+classes = 9  # outputs (9 labels + 1 background)
 maxEpochs = 100
 batch_size = 10
 shuffle = True
@@ -78,7 +81,7 @@ criterion = torch.nn.CrossEntropyLoss(ignore_index=0)
 optimizer = torch.optim.SGD(model.parameters(), Lr)
 
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
 trainingAcc = []
