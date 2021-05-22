@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import os
+from loguru import logger
 
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
@@ -16,17 +17,25 @@ def listdir_nohidden(path):
         if not f.startswith('.'):
             yield f
 
-train_path = "../Data/Agriculture-Vision-2021/train/images/nir/"
-val_path = "../Data/Agriculture-Vision-2021/val/images/nir/"
-test_path = "../Data/Agriculture-Vision-2021/test/images/nir/"
+# train_path = "../Data/Agriculture-Vision-2021/train/images/nir/"
+# val_path = "../Data/Agriculture-Vision-2021/val/images/nir/"
+# test_path = "../Data/Agriculture-Vision-2021/test/images/nir/"
 
-train_labels_path = "../Data/Agriculture-Vision-2021/train/labels/"
-val_labels_path = "../Data/Agriculture-Vision-2021/val/labels/"
-test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
+# train_labels_path = "../Data/Agriculture-Vision-2021/train/labels/"
+# val_labels_path = "../Data/Agriculture-Vision-2021/val/labels/"
+# test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
 
-train_img_names_index = os.listdir(train_path)[:1000]
-val_img_names_index = os.listdir(val_path)[:100]
-test_img_names_index = os.listdir(test_path)[:200]
+train_path = "small_dataset/images/nir/"
+val_path = "small_dataset/images/nir/"
+test_path = "small_dataset/images/nir/"
+
+train_labels_path = "small_dataset/labels/"
+val_labels_path = "small_dataset/labels/"
+test_labels_path = "small_dataset/labels/"
+
+train_img_names_index = os.listdir(train_path)[:10]
+val_img_names_index = os.listdir(val_path)[:2]
+test_img_names_index = os.listdir(test_path)[:5]
 
 labels_one_hot = {}
 k = 9
@@ -51,7 +60,7 @@ shuffle = True
 if Use_GPU: 
     if torch.cuda.is_available():
         device = torch.device('cuda')
-        print('cuda used')
+        logger.info('cuda used')
     else:
         device = torch.device('cpu')
 else:
@@ -81,66 +90,66 @@ def itterProgress(x, text = "training"):
     return tqdm(enumerate(x), text, total = len(x))
 
 def run(): 
-#     itter = itterProgress(trainX)
-    
-    
+    # itter = itterProgress(trainX)
+
     for epoch in range(maxEpochs):
-        train()
-        if epoch % 1 == 0: 
-            print("training Epoch :" + str(epoch)  + "max Epochs")
-
-        val_loss = validate()
-        if val_loss > np.mean(validationLoss):
-            print("Overfitting detected")
-            break
-
+        train(epoch)
 
     torch.save(model.state_dict(), "trained_model.pth")
     
 
-def train(): 
+def train(epoch):
     model.train()
     for i, (batch_x, batch_y) in enumerate(train_dataloader):
         indata, target = batch_x.to(device), batch_y.to(device)
         optimizer.zero_grad()
         indata = indata.unsqueeze(1)
         out = model(indata)
-
         out_softmax = torch.softmax(out, 1)
         img = postprocess(out_softmax)
-        acc = iou(img, target)
-        print('Training accuracy for batch %i: %f' % (i, acc))
-        trainingAcc.append(acc)   
         
+        train_acc = iou(img, target)
         loss = criterion(out, target)
-        loss_value = loss.item()
-        print('Training loss for batch %i: %f' % (i, loss_value))
-        trainingLoss.append(loss_value)
+        train_loss = loss.item()
+        
+        trainingAcc.append(train_acc)
+        trainingLoss.append(train_loss)
+
         loss.backward()
         optimizer.step()
 
+        val_acc, val_loss = validate()
+
+        validationAcc.append(val_acc)
+        validationLoss.append(val_loss)
+
+        logger.info(f"Epoch {epoch} batch {i+1}/{len(train_dataloader)} loss={train_loss} acc={train_acc} val_loss={val_loss} val_acc={val_acc}")
+
+        if val_loss > np.mean(validationLoss):
+            print("Overfitting detected")
+            break
+
 def validate():
     model.eval()
-    validationLoss_temp = []    
+    validationAcc_temp = []
+    validationLoss_temp = []
     for i, (batch_x, batch_y) in enumerate(val_dataloader):
         indata, target = batch_x.to(device), batch_y.to(device)
         
         with torch.no_grad():
             indata = indata.unsqueeze(1)
             out = model.forward(indata)
-            
             out_softmax = torch.softmax(out, 1)
             img = postprocess(out_softmax)
-            acc = iou(img, target)
-            print('Validation accuracy: ' + str(acc))
-            validationAcc.append(acc)
             
+            val_acc = iou(img, target)            
             loss = criterion(out, target)
-            loss_value = loss.item()
-            validationLoss.append(loss_value)
-            validationLoss_temp.append(loss_value)
+            val_loss = loss.item()
+
+            validationAcc_temp.append(val_acc)
+            validationLoss_temp.append(val_loss)
     
-    return np.mean(validationLoss_temp)
+    return np.mean(validationAcc_temp),np.mean(validationLoss_temp)
 
 def postprocess(img):
     img = torch.argmax(img, dim=1)
@@ -154,13 +163,10 @@ def postprocess(img):
 def iou(prediction, target):
     eps = 0
     score = 0
-    # print(torch.unique(prediction))
-    # print(torch.unique(target))
+
     for k in range(1, 10):
         intersection = torch.sum((prediction==target) * (target==k)).item()
-        # print('intersection: ' + str(intersection))
         union = torch.sum(prediction==k).item() + torch.sum(target==k).item()
-        # print('union: ' + str(union))
         iou_k = 0 if intersection == 0 else (intersection + eps) / (union + eps)
         score += iou_k
 
