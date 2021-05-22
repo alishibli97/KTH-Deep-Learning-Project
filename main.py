@@ -74,7 +74,7 @@ model = UNet(channels, classes).to(device)
 trainValRate = 0.7  # not in use
 lrRatesplan = None  # not in use
 activation = "relu"  # not in use 
-criterion = torch.nn.CrossEntropyLoss()
+criterion = torch.nn.CrossEntropyLoss(ignore_index=0)
 optimizer = torch.optim.SGD(model.parameters(), Lr)
 
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
