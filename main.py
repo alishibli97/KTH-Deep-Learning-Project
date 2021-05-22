@@ -17,25 +17,25 @@ def listdir_nohidden(path):
         if not f.startswith('.'):
             yield f
 
-# train_path = "../Data/Agriculture-Vision-2021/train/images/nir/"
-# val_path = "../Data/Agriculture-Vision-2021/val/images/nir/"
-# test_path = "../Data/Agriculture-Vision-2021/test/images/nir/"
+train_path = "../Data/Agriculture-Vision-2021/train/images/nir/"
+val_path = "../Data/Agriculture-Vision-2021/val/images/nir/"
+test_path = "../Data/Agriculture-Vision-2021/test/images/nir/"
 
-# train_labels_path = "../Data/Agriculture-Vision-2021/train/labels/"
-# val_labels_path = "../Data/Agriculture-Vision-2021/val/labels/"
-# test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
+train_labels_path = "../Data/Agriculture-Vision-2021/train/labels/"
+val_labels_path = "../Data/Agriculture-Vision-2021/val/labels/"
+test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
 
-train_path = "small_dataset/images/nir/"
-val_path = "small_dataset/images/nir/"
-test_path = "small_dataset/images/nir/"
+# train_path = "small_dataset/images/nir/"
+# val_path = "small_dataset/images/nir/"
+# test_path = "small_dataset/images/nir/"
 
-train_labels_path = "small_dataset/labels/"
-val_labels_path = "small_dataset/labels/"
-test_labels_path = "small_dataset/labels/"
+# train_labels_path = "small_dataset/labels/"
+# val_labels_path = "small_dataset/labels/"
+# test_labels_path = "small_dataset/labels/"
 
-train_img_names_index = os.listdir(train_path)[:10]
-val_img_names_index = os.listdir(val_path)[:2]
-test_img_names_index = os.listdir(test_path)[:5]
+train_img_names_index = os.listdir(train_path)[:1000]
+val_img_names_index = os.listdir(val_path)[:200]
+test_img_names_index = os.listdir(test_path)[:200]
 
 labels_one_hot = {}
 k = 9
@@ -52,7 +52,7 @@ Use_GPU = True
 Lr = 1e-3
 channels = 1  # NIR vs RGB
 classes = 10  # outputs (9 labels + 1 background)
-maxEpochs = 10
+maxEpochs = 100
 batch_size = 10
 shuffle = True
 
