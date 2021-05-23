@@ -25,9 +25,13 @@ class SegmentationDataset(Dataset):
             n_ignored_images = 0
             for i,img_name in enumerate(img_names):
                 if i %100== 0:logger.info(f"Reading {data_type} image {i} out of {len(img_names)}")
-		input_ID = self.image_path + img_name
+                input_ID = self.image_path + img_name
                 x = imread(input_ID)
+<<<<<<< HEAD
+                y = None
+=======
 		y = None
+>>>>>>> 7b859307398ad2565cda8b629d4457039001ab75
                 try:
                     for label in self.one_hot:
 
@@ -62,7 +66,6 @@ class SegmentationDataset(Dataset):
             
             if n_ignored_images>0:
                 logger.info(f"Ignoring {n_ignored_images} images because of missing labels")
-
 
     def __len__(self):
         return len(self.img_names)
