@@ -21,12 +21,13 @@ class SegmentationDataset(Dataset):
 
         if self.use_cache:
             self.cached_data = []
-
+	        
             n_ignored_images = 0
             for i,img_name in enumerate(img_names):
-                logger.info(f"Reading {data_type} image {i} out of {len(img_names)}")
-                input_ID = self.image_path + img_name
+                if i %100== 0:logger.info(f"Reading {data_type} image {i} out of {len(img_names)}")
+		input_ID = self.image_path + img_name
                 x = imread(input_ID)
+	
 
                 y = None
                 try:

@@ -18,6 +18,18 @@ def listdir_nohidden(path):
         if not f.startswith('.'):
             yield f
 
+notali = True 
+if notali:
+        ali = "../../../alishibli6/DD2424-Deep-Learning-Project/"
+else:
+        ali = ""
+train_path =ali + "../Data/Agriculture-Vision-2021/train/images/nir/"
+val_path = ali+"../Data/Agriculture-Vision-2021/val/images/nir/"
+test_path =ali+ "../Data/Agriculture-Vision-2021/test/images/nir/"
+train_labels_path =ali+ "../Data/Agriculture-Vision-2021/train/labels/"
+val_labels_path =ali+ "../Data/Agriculture-Vision-2021/val/labels/"
+test_labels_path =ali+ "../Data/Agriculture-Vision-2021/test/labels/"
+
 # train_path = "../Data/Agriculture-Vision-2021/train/images/nir/"
 # val_path = "../Data/Agriculture-Vision-2021/val/images/nir/"
 # test_path = "../Data/Agriculture-Vision-2021/test/images/nir/"
@@ -26,13 +38,13 @@ def listdir_nohidden(path):
 # val_labels_path = "../Data/Agriculture-Vision-2021/val/labels/"
 # test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
 
-train_path = "small_dataset/images/nir/"
-val_path = "small_dataset/images/nir/"
-test_path = "small_dataset/images/nir/"
+#train_path = "small_dataset/images/nir/"
+#val_path = "small_dataset/images/nir/"
+#test_path = "small_dataset/images/nir/"
 
-train_labels_path = "small_dataset/labels/"
-val_labels_path = "small_dataset/labels/"
-test_labels_path = "small_dataset/labels/"
+#train_labels_path = "small_dataset/labels/"
+#val_labels_path = "small_dataset/labels/"
+#test_labels_path = "small_dataset/labels/"
 
 train = os.listdir(train_path)
 val = os.listdir(val_path)
@@ -42,9 +54,9 @@ random.shuffle(train)
 random.shuffle(val)
 random.shuffle(test)
 
-train_img_names_index = train[:10]
-val_img_names_index = val[:10]
-test_img_names_index = test[:10]
+train_img_names_index = train[:10000]
+val_img_names_index = val[:2000]
+test_img_names_index = test[:2000]
 
 labels_one_hot = {}
 k = 8
@@ -57,7 +69,7 @@ for label in listdir_nohidden(train_labels_path):
 
 train_dataset = SegmentationDataset("train", train_img_names_index, labels_one_hot, train_path, train_labels_path, use_cache=True)
 val_dataset = SegmentationDataset("validation", val_img_names_index, labels_one_hot, val_path, val_labels_path, use_cache=True)
-# test_dataset = SegmentationDataset("test", test_img_names_index, labels_one_hot, test_path, test_labels_path, use_cache=True)
+#test_dataset = SegmentationDataset("test", test_img_names_index, labels_one_hot, test_path, test_labels_path, use_cache=True)
 
 # SETTINGS
 Use_GPU = True
@@ -110,7 +122,7 @@ def run():
     for epoch in range(maxEpochs):
         train(epoch)
 
-        if epoch%5==0:
+        if epoch%1==0:
             torch.save(model.state_dict(), f"trained_model_{epoch}.pth")
 
             f = open(f"history_{epoch}.txt","w")
