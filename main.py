@@ -34,11 +34,17 @@ train_labels_path = "small_dataset/labels/"
 val_labels_path = "small_dataset/labels/"
 test_labels_path = "small_dataset/labels/"
 
-train_img_names_index = os.listdir(train_path)[:10]
-val_img_names_index = os.listdir(val_path)[:2]
-test_img_names_index = os.listdir(test_path)[:2]
+train = os.listdir(train_path)
+val = os.listdir(val_path)
+test = os.listdir(test_path)
 
+random.shuffle(train)
+random.shuffle(val)
+random.shuffle(test)
 
+train_img_names_index = train[:10]
+val_img_names_index = val[:10]
+test_img_names_index = test[:10]
 
 labels_one_hot = {}
 k = 8
@@ -80,7 +86,10 @@ model = UNet(channels, classes).to(device)
 trainValRate = 0.7  # not in use
 lrRatesplan = None  # not in use
 activation = "relu"  # not in use 
-criterion = torch.nn.CrossEntropyLoss(ignore_index=0)
+
+class_weights = torch.FloatTensor([1]+[5]*8).cuda()
+criterion = nn.CrossEntropyLoss(weight=class_weights)
+
 optimizer = torch.optim.SGD(model.parameters(), Lr)
 
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
