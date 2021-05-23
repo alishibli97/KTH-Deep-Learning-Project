@@ -11,6 +11,7 @@ from loguru import logger
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from tqdm import tqdm, trange
+import random
 
 def listdir_nohidden(path):
     for f in os.listdir(path):
@@ -33,7 +34,7 @@ test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
 # val_labels_path = "small_dataset/labels/"
 # test_labels_path = "small_dataset/labels/"
 
-train_img_names_index = os.listdir(train_path)[:20000]
+train_img_names_index = random.shulle(os.listdir(train_path))[:20000]
 val_img_names_index = os.listdir(val_path)[:4000]
 test_img_names_index = os.listdir(test_path)[:2000]
 
