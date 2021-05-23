@@ -27,9 +27,7 @@ class SegmentationDataset(Dataset):
                 if i %100== 0:logger.info(f"Reading {data_type} image {i} out of {len(img_names)}")
 		input_ID = self.image_path + img_name
                 x = imread(input_ID)
-	
-
-                y = None
+		y = None
                 try:
                     for label in self.one_hot:
 
