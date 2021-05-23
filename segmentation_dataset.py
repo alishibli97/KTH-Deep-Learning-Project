@@ -10,7 +10,7 @@ from loguru import logger
 import torchvision
 
 class SegmentationDataset(Dataset):
-    def __init__(self, img_names, one_hot, image_path, label_path, transform=None, use_cache=False, pre_transform=None):
+    def __init__(self, data_type, img_names, one_hot, image_path, label_path, transform=None, use_cache=False, pre_transform=None):
         self.img_names = img_names
         self.one_hot = one_hot
         self.image_path = image_path
@@ -23,13 +23,15 @@ class SegmentationDataset(Dataset):
             self.cached_data = []
 
             n_ignored_images = 0
-            for img_name in img_names:
+            for i,img_name in enumerate(img_names):
+                logger.info(f"Reading {data_type} image {i} out of {len(img_names)}")
                 input_ID = self.image_path + img_name
                 x = imread(input_ID)
 
                 y = None
                 try:
                     for label in self.one_hot:
+
                         pre, ext = os.path.splitext(img_name)
                         yy = imread(self.label_path + label + "/" + pre + ".png")
 

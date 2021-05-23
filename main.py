@@ -33,9 +33,9 @@ test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
 # val_labels_path = "small_dataset/labels/"
 # test_labels_path = "small_dataset/labels/"
 
-train_img_names_index = os.listdir(train_path)[:1000]
-val_img_names_index = os.listdir(val_path)[:200]
-test_img_names_index = os.listdir(test_path)[:200]
+train_img_names_index = os.listdir(train_path)[:20000]
+val_img_names_index = os.listdir(val_path)[:4000]
+test_img_names_index = os.listdir(test_path)[:2000]
 
 labels_one_hot = {}
 k = 8
@@ -46,17 +46,17 @@ for label in listdir_nohidden(train_labels_path):
         labels_one_hot[label][i] = 1
         i+=1
 
-train_dataset = SegmentationDataset(train_img_names_index, labels_one_hot, train_path, train_labels_path, use_cache=True)
-val_dataset = SegmentationDataset(val_img_names_index, labels_one_hot, val_path, val_labels_path, use_cache=True)
-test_dataset = SegmentationDataset(test_img_names_index, labels_one_hot, test_path, test_labels_path, use_cache=True)
+train_dataset = SegmentationDataset("train", train_img_names_index, labels_one_hot, train_path, train_labels_path, use_cache=True)
+val_dataset = SegmentationDataset("validation", val_img_names_index, labels_one_hot, val_path, val_labels_path, use_cache=True)
+# test_dataset = SegmentationDataset("test", test_img_names_index, labels_one_hot, test_path, test_labels_path, use_cache=True)
 
 # SETTINGS
 Use_GPU = True
-Lr = 1e-3
+Lr = 1e-2
 channels = 1  # NIR vs RGB
 classes = 9  # outputs (9 labels + 1 background)
-maxEpochs = 100
-batch_size = 10
+maxEpochs = 30
+batch_size = 64
 shuffle = True
 
 # Code 
@@ -82,7 +82,7 @@ optimizer = torch.optim.SGD(model.parameters(), Lr)
 
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle)
-test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
+# test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
 trainingAcc = []
 trainingLoss = []
@@ -98,8 +98,14 @@ def run():
     for epoch in range(maxEpochs):
         train(epoch)
 
-    torch.save(model.state_dict(), "trained_model.pth")
-    
+        if epoch%5==0:
+            torch.save(model.state_dict(), f"trained_model_{epoch}.pth")
+
+            f = open(f"history_{epoch}.txt","w")
+            for i in range(len(trainingAcc)):
+                str = f"acc_train={trainingAcc[i]},acc_loss={trainingLoss[i]},val_acc={validationAcc[i]},val_loss={validationLoss[i]}\n"
+                f.write(str)
+
 
 def train(epoch):
     model.train()
