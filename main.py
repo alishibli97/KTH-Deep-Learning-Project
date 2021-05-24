@@ -18,7 +18,7 @@ def listdir_nohidden(path):
         if not f.startswith('.'):
             yield f
 
-notali = True 
+notali = False
 if notali:
         ali = "../../../alishibli6/DD2424-Deep-Learning-Project/"
 else:
@@ -122,7 +122,7 @@ def run():
     for epoch in range(maxEpochs):
         train(epoch)
 
-        if epoch%1==0:
+        if epoch%3==0:
             torch.save(model.state_dict(), f"trained_model_{epoch}.pth")
 
             f = open(f"history_{epoch}.txt","w")
@@ -158,8 +158,8 @@ def train(epoch):
 
         logger.info(f"Epoch {epoch} batch {i+1}/{len(train_dataloader)} loss={train_loss} acc={train_acc} val_loss={val_loss} val_acc={val_acc}")
 
-        if val_loss > np.mean(validationLoss):
-            print("Overfitting detected")
+        if val_loss > np.mean(validationLoss)*1.5:
+            logger.info("Overfitting detected")
             break
 
 def validate():
