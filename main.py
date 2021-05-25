@@ -1,6 +1,7 @@
 # dataloader code
 from unet import *
 from segmentation_dataset import SegmentationDataset
+from torch.nn import DataParallel
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -94,6 +95,7 @@ else:
 # fix activationfunc, dropout and other settings for model as parameters later 
 
 model = UNet(channels, classes).to(device)
+model = DataParallel(model, device_ids=range(10),output_device=range(10))
 
 trainValRate = 0.7  # not in use
 lrRatesplan = None  # not in use
