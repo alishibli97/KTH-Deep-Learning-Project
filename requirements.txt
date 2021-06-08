@@ -1,4 +1,9 @@
-torch
-scikit-image
-tensorflow
-opencv-python
+loguru==0.5.3
+torchvision==0.8.1
+torch==1.7.0
+opencv_python==4.5.2.52
+scikit_image==0.17.2
+matplotlib==3.3.3
+tqdm==4.53.0
+numpy==1.19.2
+skimage==0.0
