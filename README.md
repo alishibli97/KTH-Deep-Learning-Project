@@ -28,3 +28,7 @@ You can find pretrained weights and history for accuracy/loss using the followin
 https://deeplearningweights.s3.amazonaws.com/trained_model_{}.pth
 
 https://deeplearningweights.s3.amazonaws.com/history_{}.txt
+
+## References
+[U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597)
+[AGRICULTURE-VISION: CHALLENGES & OPPORTUNITIES FOR COMPUTER VISION IN AGRICULTURE](https://www.agriculture-vision.com/agriculture-vision-2021)
