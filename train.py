@@ -13,199 +13,214 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from tqdm import tqdm, trange
 import random
+import argparse
+from configuration import config
+
 
 def listdir_nohidden(path):
     for f in os.listdir(path):
         if not f.startswith('.'):
             yield f
 
-notali = False
-if notali:
-        ali = "../../../alishibli6/DD2424-Deep-Learning-Project/"
-else:
-        ali = ""
-train_path =ali + "../Data/Agriculture-Vision-2021/train/images/nir/"
-val_path = ali+"../Data/Agriculture-Vision-2021/val/images/nir/"
-test_path =ali+ "../Data/Agriculture-Vision-2021/test/images/nir/"
-train_labels_path =ali+ "../Data/Agriculture-Vision-2021/train/labels/"
-val_labels_path =ali+ "../Data/Agriculture-Vision-2021/val/labels/"
-test_labels_path =ali+ "../Data/Agriculture-Vision-2021/test/labels/"
+class UnetTrainer:
+    def __init__(self,cfg):
+        self.cfg = cfg
 
-# train_path = "../Data/Agriculture-Vision-2021/train/images/nir/"
-# val_path = "../Data/Agriculture-Vision-2021/val/images/nir/"
-# test_path = "../Data/Agriculture-Vision-2021/test/images/nir/"
+        self.trainingAcc = []
+        self.trainingLoss = []
+        self.validationAcc = []
+        self.validationLoss = []
 
-# train_labels_path = "../Data/Agriculture-Vision-2021/train/labels/"
-# val_labels_path = "../Data/Agriculture-Vision-2021/val/labels/"
-# test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
+        self.setup_network_params()
+        self.setup_dataset()
 
-#train_path = "small_dataset/images/nir/"
-#val_path = "small_dataset/images/nir/"
-#test_path = "small_dataset/images/nir/"
+    def setup_network_params(self):
+        # SETTINGS
+        Use_GPU = True
+        self.Lr = self.cfg.lr # 1e-2
+        self.channels = self.cfg.channels # 1 NIR vs 3 RGB
+        self.classes = self.cfg.classes # 9
+        self.maxEpochs = self.cfg.epochs # 30
+        self.batch_size = self.cfg.batch # 64
+        self.iter = self.cfg.iter # 3
+        self.shuffle = True
 
-#train_labels_path = "small_dataset/labels/"
-#val_labels_path = "small_dataset/labels/"
-#test_labels_path = "small_dataset/labels/"
+        # Code 
+        if Use_GPU: 
+            if torch.cuda.is_available():
+                self.device = torch.device('cuda')
+                logger.info('cuda used')
+            else:
+                self.device = torch.device('cpu')
+        else:
+            self.device = torch.device('cpu')
 
-train = os.listdir(train_path)
-val = os.listdir(val_path)
-test = os.listdir(test_path)
+    def setup_dataset(self):
+        """
+        train_path =  "../Data/Agriculture-Vision-2021/train/images/nir/"
+        val_path = "../Data/Agriculture-Vision-2021/val/images/nir/"
+        test_path = "../Data/Agriculture-Vision-2021/test/images/nir/"
 
-random.shuffle(train)
-random.shuffle(val)
-random.shuffle(test)
+        train_labels_path = "../Data/Agriculture-Vision-2021/train/labels/"
+        val_labels_path = "../Data/Agriculture-Vision-2021/val/labels/"
+        test_labels_path = "../Data/Agriculture-Vision-2021/test/labels/"
+        """
 
-train_img_names_index = train[:10000]
-val_img_names_index = val[:2000]
-test_img_names_index = test[:2000]
+        """
+        train_path = "small_dataset/images/nir/"
+        val_path = "small_dataset/images/nir/"
+        test_path = "small_dataset/images/nir/"
 
-labels_one_hot = {}
-k = 8
-i=0
-for label in listdir_nohidden(train_labels_path):
-    if label!="storm_damage":
-        labels_one_hot[label] = np.zeros((k,))
-        labels_one_hot[label][i] = 1
-        i+=1
+        train_labels_path = "small_dataset/labels/"
+        val_labels_path = "small_dataset/labels/"
+        test_labels_path = "small_dataset/labels/"
+        """
 
-train_dataset = SegmentationDataset("train", train_img_names_index, labels_one_hot, train_path, train_labels_path, use_cache=True)
-val_dataset = SegmentationDataset("validation", val_img_names_index, labels_one_hot, val_path, val_labels_path, use_cache=True)
-#test_dataset = SegmentationDataset("test", test_img_names_index, labels_one_hot, test_path, test_labels_path, use_cache=True)
+        train_path = f"{self.cfg.data_dir}/images"
+        val_path = f"{self.cfg.data_dir}/images"
+        test_path = f"{self.cfg.data_dir}/images"
 
-# SETTINGS
-Use_GPU = True
-Lr = 1e-2
-channels = 1  # NIR vs RGB
-classes = 9  # outputs (9 labels + 1 background)
-maxEpochs = 30
-batch_size = 64
-shuffle = True
+        train_labels_path = f"{self.cfg.data_dir}/labels/"
+        val_labels_path = f"{self.cfg.data_dir}/labels/"
+        test_labels_path = f"{self.cfg.data_dir}/labels/"
 
-# Code 
-if Use_GPU: 
-    if torch.cuda.is_available():
-        device = torch.device('cuda')
-        logger.info('cuda used')
-    else:
-        device = torch.device('cpu')
-else:
-    device = torch.device('cpu')
-# initalize model 
+        train = os.listdir(train_path)
+        val = os.listdir(val_path)
+        test = os.listdir(test_path)
 
-# fix activationfunc, dropout and other settings for model as parameters later 
+        random.shuffle(train)
+        random.shuffle(val)
+        random.shuffle(test)
 
-model = UNet(channels, classes).to(device)
-model = DataParallel(model, device_ids=range(10),output_device=range(10))
+        train_img_names_index = train[:10000]
+        val_img_names_index = val[:2000]
+        test_img_names_index = test[:2000]
 
-trainValRate = 0.7  # not in use
-lrRatesplan = None  # not in use
-activation = "relu"  # not in use 
+        labels_one_hot = {}
+        k = self.cfg.classes # 8
+        i=0
+        for label in listdir_nohidden(train_labels_path):
+            if label!="storm_damage":
+                labels_one_hot[label] = np.zeros((k,))
+                labels_one_hot[label][i] = 1
+                i+=1
 
-class_weights = torch.FloatTensor([1]+[5]*8).cuda()
-criterion = nn.CrossEntropyLoss(weight=class_weights)
+        train_dataset = SegmentationDataset("train", train_img_names_index, labels_one_hot, train_path, train_labels_path, use_cache=True)
+        val_dataset = SegmentationDataset("validation", val_img_names_index, labels_one_hot, val_path, val_labels_path, use_cache=True)
+        # test_dataset = SegmentationDataset("test", test_img_names_index, labels_one_hot, test_path, test_labels_path, use_cache=True)
 
-optimizer = torch.optim.SGD(model.parameters(), Lr)
-
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle)
-# test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
-
-trainingAcc = []
-trainingLoss = []
-validationAcc = []
-validationLoss = []
-
-def itterProgress(x, text = "training"):
-    return tqdm(enumerate(x), text, total = len(x))
-
-def run(): 
-    # itter = itterProgress(trainX)
-
-    for epoch in range(maxEpochs):
-        train(epoch)
-
-        if epoch%3==0:
-            torch.save(model.state_dict(), f"trained_model_{epoch}.pth")
-
-            f = open(f"history_{epoch}.txt","w")
-            for i in range(len(trainingAcc)):
-                str = f"acc_train={trainingAcc[i]},acc_loss={trainingLoss[i]},val_acc={validationAcc[i]},val_loss={validationLoss[i]}\n"
-                f.write(str)
-
-
-def train(epoch):
-    model.train()
-    for i, (batch_x, batch_y) in enumerate(train_dataloader):
-        indata, target = batch_x.to(device), batch_y.to(device)
-        optimizer.zero_grad()
-        indata = indata.unsqueeze(1)
-        out = model(indata)
-        out_softmax = torch.softmax(out, 1)
-        img = postprocess(out_softmax)
-        
-        train_acc = iou(img, target)
-        loss = criterion(out, target)
-        train_loss = loss.item()
-        
-        trainingAcc.append(train_acc)
-        trainingLoss.append(train_loss)
-
-        loss.backward()
-        optimizer.step()
-
-        val_acc, val_loss = validate()
-
-        validationAcc.append(val_acc)
-        validationLoss.append(val_loss)
-
-        logger.info(f"Epoch {epoch} batch {i+1}/{len(train_dataloader)} loss={train_loss} acc={train_acc} val_loss={val_loss} val_acc={val_acc}")
-
-        if val_loss > np.mean(validationLoss)*1.5:
-            logger.info("Overfitting detected")
-            break
-
-def validate():
-    model.eval()
-    validationAcc_temp = []
-    validationLoss_temp = []
-    for i, (batch_x, batch_y) in enumerate(val_dataloader):
-        indata, target = batch_x.to(device), batch_y.to(device)
-        
-        with torch.no_grad():
-            indata = indata.unsqueeze(1)
-            out = model.forward(indata)
-            out_softmax = torch.softmax(out, 1)
-            img = postprocess(out_softmax)
-            
-            val_acc = iou(img, target)            
-            loss = criterion(out, target)
-            val_loss = loss.item()
-
-            validationAcc_temp.append(val_acc)
-            validationLoss_temp.append(val_loss)
+        self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
+        self.val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
+        # self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size)
     
-    return np.mean(validationAcc_temp),np.mean(validationLoss_temp)
+    def initialize_model(self):
+        # fix activationfunc, dropout and other settings for model as parameters later 
+        self.model = UNet(self.channels, self.classes).to(self.device)
+        self.model = DataParallel(self.model, device_ids=range(10),output_device=range(10))
 
-def postprocess(img):
-    img = torch.argmax(img, dim=1)
-    img = img.cpu().numpy()
-    img = np.squeeze(img)
-    img = torch.from_numpy(img).type(torch.int64)
-    img = img.to(device)
-    # img = re_normalize(img)
-    return img
+        class_weights = torch.FloatTensor([1]+[5]*8).cuda()
+        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
 
-def iou(prediction, target):
-    eps = 0
-    score = 0
+        self.optimizer = torch.optim.SGD(self.model.parameters(), self.Lr)
 
-    for k in range(1, 10):
-        intersection = torch.sum((prediction==target) * (target==k)).item()
-        union = torch.sum(prediction==k).item() + torch.sum(target==k).item()
-        iou_k = 0 if intersection == 0 else (intersection + eps) / (union + eps)
-        score += iou_k
+    def itterProgress(x, text = "training"):
+        return tqdm(enumerate(x), text, total = len(x))
 
-    score = score / 9
-    return score
+    def run(self): 
+        # itter = itterProgress(trainX)
 
-run()
+        for epoch in range(self.maxEpochs):
+            self.train(epoch)
+
+            if epoch%self.iter==0:
+                torch.save(self.model.state_dict(), f"trained_model_{epoch}.pth")
+
+                f = open(f"history_{epoch}.txt","w")
+                for i in range(len(self.trainingAcc)):
+                    str = f"acc_train={self.trainingAcc[i]},acc_loss={self.trainingLoss[i]},val_acc={self.validationAcc[i]},val_loss={self.validationLoss[i]}\n"
+                    f.write(str)
+
+    def train(self):
+        self.model.train()
+        for i, (batch_x, batch_y) in enumerate(self.train_dataloader):
+            indata, target = batch_x.to(self.device), batch_y.to(self.device)
+            self.optimizer.zero_grad()
+            indata = indata.unsqueeze(1)
+            out = self.model(indata)
+            out_softmax = torch.softmax(out, 1)
+            img = self.postprocess(out_softmax)
+            
+            train_acc = self.iou(img, target)
+            loss = self.criterion(out, target)
+            train_loss = loss.item()
+            
+            self.trainingAcc.append(train_acc)
+            self.trainingLoss.append(train_loss)
+
+            loss.backward()
+            self.optimizer.step()
+
+            val_acc, val_loss = self.validate()
+
+            self.validationAcc.append(val_acc)
+            self.validationLoss.append(val_loss)
+
+            logger.info(f"Epoch {self.epoch} batch {i+1}/{len(self.train_dataloader)} loss={train_loss} acc={train_acc} val_loss={val_loss} val_acc={val_acc}")
+
+            if val_loss > np.mean(self.validationLoss)*1.5:
+                logger.info("Overfitting detected")
+                break
+
+    def validate(self):
+        self.model.eval()
+        validationAcc_temp = []
+        validationLoss_temp = []
+        for i, (batch_x, batch_y) in enumerate(self.val_dataloader):
+            indata, target = batch_x.to(self.device), batch_y.to(self.device)
+            
+            with torch.no_grad():
+                indata = indata.unsqueeze(1)
+                out = self.model.forward(indata)
+                out_softmax = torch.softmax(out, 1)
+                img = self.postprocess(out_softmax)
+                
+                val_acc = self.iou(img, target)            
+                loss = self.criterion(out, target)
+                val_loss = loss.item()
+
+                validationAcc_temp.append(val_acc)
+                validationLoss_temp.append(val_loss)
+        
+        return np.mean(validationAcc_temp),np.mean(validationLoss_temp)
+
+    def postprocess(self,img):
+        img = torch.argmax(img, dim=1)
+        img = img.cpu().numpy()
+        img = np.squeeze(img)
+        img = torch.from_numpy(img).type(torch.int64)
+        img = img.to(self.device)
+        # img = re_normalize(img)
+        return img
+
+    def iou(self, prediction, target):
+        eps = 0
+        score = 0
+
+        for k in range(1, 10):
+            intersection = torch.sum((prediction==target) * (target==k)).item()
+            union = torch.sum(prediction==k).item() + torch.sum(target==k).item()
+            iou_k = 0 if intersection == 0 else (intersection + eps) / (union + eps)
+            score += iou_k
+
+        score = score / self.classes
+        return score
+
+def main():    
+    cfg = config().parse_args()
+    trainer = UnetTrainer()
+
+    trainer.run()
+
+
+if __name__=="__main__":
+    main()
