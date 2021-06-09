@@ -9,6 +9,7 @@ Python 3.8 or later with all [requirements.txt](https://github.com/alishibli97/K
 
 `pip install -r requirements.txt`
 
+
 ## Training
 `train.py` runs the training pipeline and save the model every 3 epochs by default. You can run it as:
 ```
@@ -21,6 +22,7 @@ python train.py
       --iter number_of_batches_before_saving_the_model (default = 3)
 ```
 
+
 ## Pretranined weights links
 
 You can find pretrained weights and history for accuracy/loss using the following links. We save the model every 3 epochs for 18 complete epochs, for 12 hours of training on 10 1080 Ti GPUs. Thus you can complete the links by insert any value from {0,3,6,9,12,15,18}:
@@ -29,6 +31,8 @@ https://deeplearningweights.s3.amazonaws.com/trained_model_{}.pth
 
 https://deeplearningweights.s3.amazonaws.com/history_{}.txt
 
+
 ## References
 [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597)
+
 [AGRICULTURE-VISION: CHALLENGES & OPPORTUNITIES FOR COMPUTER VISION IN AGRICULTURE](https://www.agriculture-vision.com/agriculture-vision-2021)
