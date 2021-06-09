@@ -27,7 +27,7 @@ python train.py
 
 ## Pretranined weights links
 
-You can find pretrained weights and history for accuracy/loss using the following links. We save the model every 3 epochs for 18 complete epochs, for 12 hours of training on 10 1080 Ti GPUs. Thus you can complete the links by insert any value from {0,3,6,9,12,15,18}:
+You can find pretrained weights and history for accuracy/loss using the following links. We save the model every 3 epochs for 18 complete epochs, for 12 hours of training on 10 1080 Ti GPUs. Thus you can complete the links by inserting any value from {0,3,6,9,12,15,18}:
 
 https://deeplearningweights.s3.amazonaws.com/trained_model_{}.pth
 
