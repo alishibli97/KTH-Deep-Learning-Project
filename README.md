@@ -5,7 +5,7 @@ The aim of this project is to apply state of the art image segmentation analysis
 
 The model is implemented from scratch following the original paper. The dataset we train on is from a competition for agricultural image segmentation, a task for detecting damaged areas in crops. Both resources can be found in the references.
 
-The report for our project can be fount at [DD2424_Project.pdf](https://github.com/alishibli97/KTH-Deep-Learning-Project/files/6700795/DD2424_Project.pdf)
+The report for our project can be fount at [Agricultural_UNet.pdf](https://github.com/alishibli97/KTH-Deep-Learning-Project/files/6700795/DD2424_Project.pdf).
 
 
 ## Requirements
